@@ -46,7 +46,7 @@ type natsConsumer struct {
 	Username    string   `toml:"username"`
 	Password    string   `toml:"password"`
 	Credentials string   `toml:"credentials"`
-	JsSubjects  []string `toml:"jssubjects"`
+	JsSubjects  []string `toml:"js_subjects"`
 
 	tls.ClientConfig
 
@@ -266,7 +266,7 @@ func init() {
 			PendingBytesLimit:      nats.DefaultSubPendingBytesLimit,
 			PendingMessageLimit:    nats.DefaultSubPendingMsgsLimit,
 			MaxUndeliveredMessages: defaultMaxUndeliveredMessages,
-			JsSubjects:             []string{"telegraf"},
+			JsSubjects:             []string{"js_telegraf"},
 		}
 	})
 }
