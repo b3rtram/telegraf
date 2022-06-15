@@ -266,7 +266,6 @@ func init() {
 			PendingBytesLimit:      nats.DefaultSubPendingBytesLimit,
 			PendingMessageLimit:    nats.DefaultSubPendingMsgsLimit,
 			MaxUndeliveredMessages: defaultMaxUndeliveredMessages,
-			JsSubjects:             []string{"js_telegraf"},
 		}
 	})
 }
