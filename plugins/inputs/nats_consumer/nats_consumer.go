@@ -183,8 +183,8 @@ func (n *natsConsumer) Start(acc telegraf.Accumulator) error {
 		go n.receiver(ctx)
 	}()
 
-	n.Log.Infof("Started the NATS consumer service, nats: %v, subjects: %v, queue: %v",
-		n.conn.ConnectedUrl(), n.Subjects, n.QueueGroup)
+	n.Log.Infof("Started the NATS consumer service, nats: %v, subjects: %v, jssubjects: %v, queue: %v",
+		n.conn.ConnectedUrl(), n.Subjects, n.JsSubjects, n.QueueGroup)
 
 	return nil
 }
@@ -228,6 +228,13 @@ func (n *natsConsumer) receiver(ctx context.Context) {
 
 func (n *natsConsumer) clean() {
 	for _, sub := range n.subs {
+		if err := sub.Unsubscribe(); err != nil {
+			n.Log.Errorf("Error unsubscribing from subject %s in queue %s: %s",
+				sub.Subject, sub.Queue, err.Error())
+		}
+	}
+
+	for _, sub := range n.jsSubs {
 		if err := sub.Unsubscribe(); err != nil {
 			n.Log.Errorf("Error unsubscribing from subject %s in queue %s: %s",
 				sub.Subject, sub.Queue, err.Error())
