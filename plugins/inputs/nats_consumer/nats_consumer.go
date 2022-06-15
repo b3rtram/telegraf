@@ -58,8 +58,10 @@ type natsConsumer struct {
 	MaxUndeliveredMessages int `toml:"max_undelivered_messages"`
 	MetricBuffer           int `toml:"metric_buffer" deprecated:"0.10.3;2.0.0;option is ignored"`
 
-	conn *nats.Conn
-	subs []*nats.Subscription
+	conn   *nats.Conn
+	jsConn *nats.JetStreamContext
+	subs   []*nats.Subscription
+	jsSubs []*nats.Subscription
 
 	parser parsers.Parser
 	// channel for all incoming NATS messages
