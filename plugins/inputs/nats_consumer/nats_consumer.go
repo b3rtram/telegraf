@@ -46,6 +46,7 @@ type natsConsumer struct {
 	Username    string   `toml:"username"`
 	Password    string   `toml:"password"`
 	Credentials string   `toml:"credentials"`
+	JsSubjects  []string `toml:"jssubjects"`
 
 	tls.ClientConfig
 
@@ -59,7 +60,7 @@ type natsConsumer struct {
 	MetricBuffer           int `toml:"metric_buffer" deprecated:"0.10.3;2.0.0;option is ignored"`
 
 	conn   *nats.Conn
-	jsConn *nats.JetStreamContext
+	jsConn nats.JetStreamContext
 	subs   []*nats.Subscription
 	jsSubs []*nats.Subscription
 
@@ -144,6 +145,32 @@ func (n *natsConsumer) Start(acc telegraf.Accumulator) error {
 
 			n.subs = append(n.subs, sub)
 		}
+
+		if len(n.JsSubjects) > 0 {
+			var connErr error
+			n.jsConn, connErr = n.conn.JetStream(nats.PublishAsyncMaxPending(256))
+			if connErr != nil {
+				return connErr
+			}
+
+			for _, jsSub := range n.JsSubjects {
+				sub, err := n.jsConn.QueueSubscribe(jsSub, n.QueueGroup, func(m *nats.Msg) {
+					n.in <- m
+				})
+				if err != nil {
+					return err
+				}
+
+				// set the subscription pending limits
+				err = sub.SetPendingLimits(n.PendingMessageLimit, n.PendingBytesLimit)
+				if err != nil {
+					return err
+				}
+
+				n.jsSubs = append(n.jsSubs, sub)
+			}
+		}
+
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -232,6 +259,7 @@ func init() {
 			PendingBytesLimit:      nats.DefaultSubPendingBytesLimit,
 			PendingMessageLimit:    nats.DefaultSubPendingMsgsLimit,
 			MaxUndeliveredMessages: defaultMaxUndeliveredMessages,
+			JsSubjects:             []string{"telegraf"},
 		}
 	})
 }
